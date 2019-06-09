@@ -213,13 +213,14 @@ database.ref().on("child_added", function (childSnapshot) {
     console.log(formattedCurrentTime);
     console.log("Minutes to next train");
     console.log(minsToNextTrain);
+    var nextTrainTime = moment(formattedCurrentTime.add(minsToNextTrain, 'minutes')).format("hh:mm a");
 
     //Create the new row
     var newRow = $("<tr>").append(
         $("<td>").text(trainName),
         $("<td>").text(destination),
         $("<td>").text(frequency),
-        $("<td>").text(""),
+        $("<td>").text(nextTrainTime),
         $("<td>").text(minsToNextTrain),
     );
 
