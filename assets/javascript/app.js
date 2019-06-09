@@ -125,83 +125,135 @@ firebase.initializeApp(firebaseConfig);
 // Create a variable to reference the database.
 var database = firebase.database();
 
-$("#add-train-btn").on("click", function(event) {
-        event.preventDefault();
-    
-        // Grabs user input
-        var trainName = $("#train-name-input").val().trim();
-        var destination = $("#destination-input").val().trim();
-        //will need to do some sort of moment function here
-        var firstTime = moment($("#first-time-input").val().trim(), "hh:mm").format("hh:mm a");
-        var frequency = $("#frequency-input").val().trim();
-    
-        // Creates local "temporary" object for holding employee data
-        var newTrain = {
-          trainName: trainName, 
-          destination: destination, 
-          firstTime: firstTime, 
-          frequency: frequency
-        };
-    
-        // Uploads employee data to the database
-        database.ref().push(newTrain);
-    
-        // Logs everything to console
-        console.log(newTrain.trainName);
-        console.log(newTrain.destination);
-        console.log(newTrain.firstTime);
-        console.log(newTrain.frequency);
-    
-        // alert("Employee successfully added");
-    
-        // Clears all of the text-boxes
-        $("#train-name-input").val("");
-        $("#destination-input").val("");
-        $("#first-time-input").val("");
-        $("#frequency-input").val("");
-      });
+$("#add-train-btn").on("click", function (event) {
+    event.preventDefault();
 
-      database.ref().on("child_added", function(childSnapshot) {
-            console.log(childSnapshot.val());
-        
-        //Store everything into a variable.
-        var trainName = childSnapshot.val().trainName;
-        var destination = childSnapshot.val().destination;
-        var firstTime = childSnapshot.val().firstTime;
-        var frequency = childSnapshot.val().frequency;
-        
-        // Employee Info
-        console.log(trainName);
-        console.log(destination);
-        console.log(firstTime);
-        console.log(frequency);
+    // Grabs user input
+    var trainName = $("#train-name-input").val().trim();
+    var destination = $("#destination-input").val().trim();
+    //will need to do some sort of moment function here
+    var firstTime = moment($("#first-time-input").val().trim(), "hh:mm")._i;
+    //work around the undefined thing
+    // firstTime._pf.meridiem = null;
+    // firstTime._pf.bigHour = null;
+    console.log("First Time");
+    console.log(firstTime);
+    var frequency = $("#frequency-input").val().trim();
+
+    // Creates local "temporary" object for holding employee data
+    var newTrain = {
+        trainName: trainName,
+        destination: destination,
+        firstTime: firstTime,
+        frequency: frequency
+    };
+
+    // Uploads employee data to the database
+    database.ref().push(newTrain);
+
+    // Logs everything to console
+    console.log(newTrain.trainName);
+    console.log(newTrain.destination);
+    console.log(newTrain.firstTime);
+    console.log(newTrain.frequency);
+
+    // alert("Employee successfully added");
+
+    // Clears all of the text-boxes
+    $("#train-name-input").val("");
+    $("#destination-input").val("");
+    $("#first-time-input").val("");
+    $("#frequency-input").val("");
+});
+
+database.ref().on("child_added", function (childSnapshot) {
+    console.log(childSnapshot.val());
+
+    //Store everything into a variable.
+    var trainName = childSnapshot.val().trainName;
+    var destination = childSnapshot.val().destination;
+    var firstTime = childSnapshot.val().firstTime;
+    var frequency = childSnapshot.val().frequency;
+
+    // Employee Info
+    console.log(trainName);
+    console.log(destination);
+    console.log(firstTime);
+    console.log(frequency);
 
 
-        
-        //Prettify the employee start
-        // var empStartPretty = moment.unix(empStart).format("MM/DD/YYYY");
-        
-        // //Calculate the months worked using hardcore math
-        // //o calculate the months worked
-        // var empMonths = moment().diff(moment(empStart, "X"), "months");
-        // console.log(empMonths);
-        
-        // //Calculate the total billed rate
-        // var empBilled = empMonths * empRate;
-        // console.log(empBilled);
-        
-        //Create the new row
-            var newRow = $("<tr>").append(
-              $("<td>").text(trainName),
-              $("<td>").text(destination),
-              $("<td>").text(frequency),
-              $("<td>").text(""),
-              $("<td>").text(""),
-            );
-        
-            // Append the new row to the table
-            $("#employee-table > tbody").append(newRow);
 
-            console.log("Current Time " + new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric"}));
-          });
-        
+    //Prettify the employee start
+    // var empStartPretty = moment.unix(empStart).format("MM/DD/YYYY");
+
+    // //Calculate the months worked using hardcore math
+    // //o calculate the months worked
+    // var empMonths = moment().diff(moment(empStart, "X"), "months");
+    // console.log(empMonths);
+
+    // //Calculate the total billed rate
+    // var empBilled = empMonths * empRate;
+    // console.log(empBilled);
+
+    var currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric" });
+    var formattedCurrentTime = moment(currentTime, "hh:mm");
+    console.log(formattedCurrentTime.hours());
+    var currentMinutes = convertTimeToMins(formattedCurrentTime);
+    console.log("First Time");
+    console.log(firstTime);
+    var startMinutes = convertTimeToMins(moment(firstTime, "hh:mm"));
+    console.log("Current Minutes");
+    console.log(currentMinutes);
+    console.log("Start Minutes");
+    console.log(startMinutes);
+    console.log("Frequency");
+    console.log(frequency);
+    var minsToNextTrain = findMinsToNextTrain(currentMinutes, startMinutes, parseInt(frequency));
+    console.log("Formatted");
+    console.log(formattedCurrentTime);
+    console.log("Minutes to next train");
+    console.log(minsToNextTrain);
+
+    //Create the new row
+    var newRow = $("<tr>").append(
+        $("<td>").text(trainName),
+        $("<td>").text(destination),
+        $("<td>").text(frequency),
+        $("<td>").text(""),
+        $("<td>").text(minsToNextTrain),
+    );
+
+    // Append the new row to the table
+    $("#employee-table > tbody").append(newRow);
+
+    // console.log("Current Time " + new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric"}));
+});
+
+function findMinsToNextTrain(currentTime, startTime, frequency) {
+    var temp = startTime;
+    console.log("Temp + Frequency");
+    console.log(temp + frequency);
+    console.log("Current Time");
+    console.log(currentTime);
+    while ((temp + frequency) <= currentTime) {
+        console.log("This ran");
+        temp += frequency;
+    }
+    temp+=frequency;
+    console.log("Temp");
+    console.log(temp);
+    return temp - currentTime;
+}
+
+function convertTimeToMins(currentTime) {
+    console.log("Hours");
+    console.log(currentTime.hours())
+    var hours = currentTime.hours();
+    console.log("minutes");
+    var minutes = currentTime.minutes();
+    console.log(minutes);
+    console.log("Return Val");
+    console.log((hours * 60) + minutes);
+    return ((hours * 60) + minutes);
+    // return 1;
+}
