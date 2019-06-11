@@ -4,7 +4,7 @@ Application that where users can input trains with various parameters and get or
 ## Project Description
 Clean interface that uses a combination of firebase and moment js to iteratively provide users with real-time data regarding input train data
 
-[The deployed version is accesible here](https://greysongy.github.io/unit-4-game/)
+[The deployed version is accesible here](https://greysongy.github.io/TrainScheduler/)
 
 ![alt text](trainSchedulersSS.png))
 
